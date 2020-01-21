@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"sort"
@@ -1606,7 +1607,11 @@ func flattenCloudFormationParameters(cfParams []*cloudformation.Parameter,
 	originalParams map[string]interface{}) map[string]interface{} {
 	params := make(map[string]interface{}, len(cfParams))
 	for _, p := range cfParams {
-		_, isConfigured := originalParams[*p.ParameterKey]
+		origParam, isConfigured := originalParams[*p.ParameterKey]
+		log.Printf("[DEBUG] XXXX CF Flatten Key/Value: %s, %s\n",
+			*p.ParameterKey, *p.ParameterValue)
+		log.Printf("[DEBUG] XXXX CF Flatten OrigParam/IsConfig: %s, %t\n",
+			origParam, isConfigured)
 		if isConfigured {
 			params[*p.ParameterKey] = *p.ParameterValue
 		}

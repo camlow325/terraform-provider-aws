@@ -77,8 +77,9 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				//Optional: true,
+				//Computed: true,
 			},
 			"outputs": {
 				Type:     schema.TypeMap,
@@ -113,6 +114,7 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 }
 
 func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
+	log.Println("[DEBUG] XXXX CF Stack Create start")
 	conn := meta.(*AWSClient).cfconn
 
 	input := cloudformation.CreateStackInput{
@@ -190,6 +192,7 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 1 * time.Second,
 		Refresh: func() (interface{}, string, error) {
+			log.Println("[DEBUG] XXXX CF Stack Create refresh")
 			resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
 				StackName: aws.String(d.Id()),
 			})
@@ -255,6 +258,7 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
+	log.Println("[DEBUG] XXXX CF Stack Read start")
 	conn := meta.(*AWSClient).cfconn
 
 	input := &cloudformation.DescribeStacksInput{
@@ -326,6 +330,14 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 
 	originalParams := d.Get("parameters").(map[string]interface{})
+
+	log.Println("[DEBUG] XXXX Read params begin")
+	for op := range originalParams {
+		log.Printf("[DEBUG] Key = %s\n", op)
+		log.Printf("[DEBUG] Value = %s\n", originalParams[op])
+	}
+	log.Println("[DEBUG] XXXX Read params end")
+
 	err = d.Set("parameters", flattenCloudFormationParameters(stack.Parameters, originalParams))
 	if err != nil {
 		return err
@@ -347,10 +359,13 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	log.Println("[DEBUG] XXXX CF Stack Read returning nil")
 	return nil
 }
 
 func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
+	log.Println("[DEBUG] XXXX CF Stack Update start")
+
 	conn := meta.(*AWSClient).cfconn
 
 	input := &cloudformation.UpdateStackInput{
@@ -439,6 +454,7 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		MinTimeout: 5 * time.Second,
 		Refresh: func() (interface{}, string, error) {
+			log.Println("[DEBUG] XXXX CF Stack Update refresh")
 			resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
 				StackName: aws.String(d.Id()),
 			})
@@ -649,6 +665,7 @@ func cfStackEventIsStackDeletion(event *cloudformation.StackEvent) bool {
 
 func cfStackStateRefresh(conn *cloudformation.CloudFormation, stackId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
+		log.Println("[DEBUG] XXXX CF Stack State refresh")
 		resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
 			StackName: aws.String(stackId),
 		})
